@@ -124,3 +124,10 @@ mysqldump [options] dbname > backupfile.sql -- -u -h -p 此外,还可以通过�
   **introduction _table relationships_ here**
 - ### <p id="4_3">小心你的查询</p>
   **introduction _query problem_ here**
+
+## <p id="5">使用 java 管理你的 MySQL</p>
+
+- ### <p id="5_1">java 连接 mysql</p>
+  **write your java code here**
+- ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
+  **write your java code here**
