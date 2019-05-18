@@ -36,6 +36,12 @@
 
 **MySQL** 是一种客户\服务器体系的数据库系统,它的服务器端部分在启动运行后是不提供人机交互界面的,所以终端用户无法直接使用 msql,只能通过 mysql 客户端或者 WEB 站点访问数据库进行管理以及 crud 操作.
 
+**_mysql functions_**:
+
+- **关系数据库系统**
+- **客服/服务器体系** MySql 是一种客户/服务器系统,整个系统由一个数据库服务器(MySQL)和任意多个客户(应用程序)构成.客户通过与服务器通信的方式来完成数据查询保存修改等操作.客户既可以与服务器运行在同一台计算机上,也可以运行在另一个计算机上.
+- **sql 兼容性**
+
 **_连接 mysql_** : `mysql -u name -p password -h host -P port -defautl-character-set=encode databasename`
 
 **_mysql-client_** 客户端操作
