@@ -68,6 +68,17 @@ SELECT * FROM TABLE1 WHERE X IN (SELECT Y FROM TABLE2)
      3. _没办法应用缓存.虽然全局临时表的方法可以做缓存,但这种方式加重了数据库的负担.如果缓存并发严重,要经常加锁,严重影响数据库效率._
      4. _无法适应数据库的切割(水平或者垂直切割),数据库切割之后,存储过程并不知道需要的数据存在哪个数据库中,在现在的业务场景中有非常大的局限性_.
 
+- **触发器** 触发器是由数据库服务器在一些特定的数据库操作(_insert_ _update_ and _delete_ )过程中自动执行的一组 sql 命令. mysql supports it from 5.1.
+- **全文搜索** 全文搜索(full-text search)简化并加快了对文本字段内单词的搜索操作.
+- **镜像复制** 镜像复制(_replication_) 允许数据库管理员把谋某个数据库的内容动态地复制到其他计算机中,这样做的理由有两个:避免因为系统故障而中断服务,二是为了加快数据库查询速度.
+- **事务** 事务是指把多个数据库操作当成一个整体(块)来对待.数据库确保操作要么全部执行要么全部不执行.即时在事务过程中出现停电,计算机崩溃或其它灾难事件发生也是如此.事务机制还可以让程序员安全地,及时地终止一组命令的执行(_并把数据库恢复到这组命令执行前的状态_) 目前 mysql 中只有 INNODB 支持事务机制.
+- **外键约束** 它们是程序员为了确保彼此关联的数据表里没有找不到目标的交叉引用而定义的一些规则.MySQL 系统中的 Innodb 数据表都支持外键约束.
+- **GIS 函数** MySQL 从 4.1 版本开始支持二维地理数据的存储和处理.因此 MySQL 适合用来开发 GIS (_Geographic Information System 地理信息系统_)应用程序
+- **程序设计语言** 在开发 MySQL 应用程序的时候,有一大批的 api(_application programming interface 应用编程接口_) 和软件开发库可供使用.本文只讨论 java.
+- **ODBC** MySQL 支持 ODBC 接口 connector/ODBC.能够在 Microsoft Windows 环境里运行的常用编程语言.**_在 unix 系统中没有必要_**.
+- **平台独立性** MySQL 客户应用程序可以在多种操作系统下运行,Mysql 本身(_即 mysql-server_) 也可以在多种操作系统中运行.
+- **速度** 人们普遍认为 Mysql 是一个非常快的数据库程序,有大量的性能测试报告支持这一结论.
+
 **_连接 mysql_** : `mysql -u name -p password -h host -P port -defautl-character-set=encode databasename`
 
 **_mysql-client_** 客户端操作
