@@ -131,6 +131,18 @@ mysqldump [options] dbname > backupfile.sql -- -u -h -p 此外,还可以通过�
 - **数据行级锁定机制** 在执行一个事务的时候,InnoDB 数据表的驱动程序使用的是它自己内建的数据行级锁定机制(_不是 MySQL 提供的数据表级锁定机制_).也就是说,在事务执行过程中,数据表是不会被锁定的,其他用户仍可以访问它,被锁定的只是正在接受事务处理的数据记录(_而 MyISAM 数据表在执行 lock table 命令期间会将整个表锁定_).如果有许多用户正在同时对一个大数据表进行修改,数据行级锁定机制将会大大提高人们的工作效率.
   > InnoDB 驱动程序能够自动识别"死锁"现象(_两个进程各自占用着一项 对方需要的资源,同时又都在等待对方释放所占用的资源,结果是谁也不能继续执行_),并自动终止两个进程中的一个.
 - **外键约束条件** 如果在数据表之间定义了关系,InnoDB 驱动程序将自动保证数据表的引用一致性在执行过 delete 后还能保持.也就是说不可能出现数据表 A 里的一条记录引用了数据表 B 里一条已经不复存在的记录的问题.专有名词:**_外键约束条件_**
+
+```sql
+FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
+[ON DELETE {CASCADE | SET NULL | NO ACTION |RESTRICT}]
+[ON UPDATE {CASCADE | SET NULL | NO ACTION |RESTRICT}]
+```
+
+- **外键约束策略**
+  - 1. **RESTRICT** _这个是默认行为,DELETE 命令将引起一个错误,但那条记录不会删除,(Delete 命令引起了一个错误并不意味着正在执行的事务半途而废,它只表明 delete 命令没有被执行而已.必须像往常一样用 commit ... rollback 命令来终止事务.)_
+  - 2. **SET NULL** table2 数据表里的记录将被删除,table1 里面受影响的所有记录的 column1 字段将全部置为 NULL.这条规则的前提是 table1.column1 字段可以取值为 NULL.
+  - 3. **CASCADE** table2 数据表里的记录将被删除,table1 表里受影响的记录也将被删除.
+  - 4. **NO ACTION** 不做任何操作.
 - **崩溃恢复** 在发生崩溃后,InnoDB 数据表能够迅速地自动恢复到一个稳定可用的状态(_前提是计算机的文件系统没有被破坏_).
 - **<span style="color:red">问题和缺陷</span>**
 
@@ -215,6 +227,30 @@ mysqldump [options] dbname > backupfile.sql -- -u -h -p 此外,还可以通过�
        >
        > > varchar 和 xxxText 类型看起来是一样的,最大长度都是(65535)个字符,但在细节上有一些区别.varchar 数据列的最大字符长度必须在声明表时设置,超长的字符串在存储时会被截短,xxxText 根本不允许为它设置一个最大长度.(唯一的限制是特定文本类型的最大长度.)
 
+  - **视图** 视图(view) 使得人们可以为一个或多个数据表定义一个特殊的表现形式.视图在行为上和数据表没有什么区别 (_可以使用 select 查询命令去查询数据,还可以(但要取决于视图的具体定义)使用 insert,update 和 delete 命令修改数据._) start at mysql5.0
+    - 1. 使用视图的理由:
+      - 1. **安全** 有时候可能不想让某个特定的数据库用户有权对某个数据表进行任何访问,这方面最典型的例子就是公司里的员工个人资料表,有些数据应该可以让全体员工可以访问到,但是有些数据就不应该是这样.
+      - 2. **方便** 在许多应用程序中,人们经常需要执行同样的查询去根据某种要求从一个或多个数据表里收集数据.让那么多用户或程序员重复输入同一个 select 语句显然不是最佳的方法.于是,作为数据库管理员,可以定义一个视图为大家提供方便.
+    - 2. 视图的定义:
+      - 1.  视图相当于一个虚拟的数据表,而这个虚拟数据表的内容是某个 select 命令执行的结果.
+      ```sql
+      create view v1 as select id,name,homeland from author;
+      select * from v1 limit 5;
+      create view v2 as
+      select author.id as a_id, author.name as a_name, book.id as b_id, book.name as b_name
+      from author,book,author_book
+      where author.id = author_book.author_id
+      and book.id = author_book.book_id;
+      ```
+      - 1.  在视图里修改数据,能不能在视图里面修改数据(或者说这个视图是不是可刷新的)要取决于当初用来定义这个视图的 select 命令,可刷新的视图需要满足以下几个条件
+        - 1.  当初用来定义视图的 select 语句不能包含 group by,distinct,limit,union 或者 having 等子命令.
+        - 2.  如果某个视图里的数据来自于一个以上的数据表,那它几乎是不能刷新的.
+        - 3.  视图应该包含主键,唯一索引,外键约束条件所涉及的全部数据列,如果视图里面没有或缺少这样的数据列,就将由 mysql 的选项 updateable*views_with_limit 来决定是允许刷新并同时返回一条警告信息(默认设置),还是不允许刷新并触发一个错误(设置为 0).
+              *视图的完整语法\*
+        ```sql
+        create [or replace] [algorithm = undefined | merge | temptable] view name [column(list)] as select command [with [cascaded | local] check option]
+        ```
+
 ## <p id="3">如何使用 sql?</p>
 
 - 1. **三大范式**
@@ -241,10 +277,66 @@ mysqldump [options] dbname > backupfile.sql -- -u -h -p 此外,还可以通过�
   - 3. **Innodb 索引类型(_普通索引,唯一索引 and 主索引_)**
     - 1. **普通索引(index)**
          *普通索引(由关键字 key or index 定义的索引)的唯一任务是加快对数据的访问速度.因此,应该只为那些经常出现在 where 子句 or order by 子句的字段加上索引.只要有可能,就应该使用最整齐,最紧凑的数据列(*比如说一个整数类型的数据列*)来创建索引*
-      2. **唯一索引(unique index)**
+    - 2. **唯一索引(unique index)**
+         _普通索引允许被索引的数据列包含重复的值,如果能确定某个数据列将只包含彼此各不相同的值,很多情况下人们创建唯一索引的目的不是提高查询效率,而是保证唯一性._
+    - 3. **主索引**
+         _主键索引,必须为每张表的一个唯一字段创建一个主键索引,主键索引和唯一索引的区别就是主键索引用 primary 进行定义._
+    - 4. **外键索引**
+         _如果为某个外键字段定义了一个外键约束条件(一致性规则),MySQL 就会定义一个内部索引来帮助自己以最有效率的方式管理和使用外键约束条件_
+    - 5. **复合索引**
+         _索引可以覆盖多个数据列,如像 index(column A,column B)索引,这种索引的特点就是 MySQL 可以有选择的使用一个这样的索引,如果查询操作只需要用到 column A 数据列上的一个索引,就可以使用复合索引,index(A,B,C)可以当做(A) (A,B)(A,B,C)来使用,但不能当做 (B),(C)(B,C)来使用._
 
 * ### <p id="3_1">基础 sql</p>
-  **introduction _basic sql_ here**
+
+  - 1. **简单 sql 语句**
+
+  ```sql
+  select * from table -- 返回数据表中所有记录
+  select count(*) from table --返回数据表中记录的总数量
+  select count(distinct publid) from table -- 确定数据表中有多少不重复的数据记录.
+  select columnA,columnB from table -- 限制数据表返回的字段.
+  select columnA,columnB from table limit 5 -- 限制数据表返回数据的个数.
+  select columnA,columnB from table order by columnA --对查询结果进行排序.
+  select columnA,columnB from table order by columnA collate utf8mb4_bin -- 采用编码方式提供的排序.
+  alter table author modify name varchar(60) CHARACTER SET utf8mb4_bin collate utf8mb4_bin -- 永久修改某个数据列的排序方式.
+  select * from author where id = 1; -- 筛选数据记录.
+  select * from author where name like '%abc%' -- 使用 like 进行模糊匹配.
+  select * from author where id in(1,2,4) -- 使用 in 进行枚举筛选.
+  ```
+
+  - 2. **多表查询**
+
+  ```sql
+  select title,pubname from titles,publishers where titiles.pubid  = publisher.pubid --找出两张表中 pubid 相同的数据.
+  select title ,pubname from titles left join publishers on title.pubid = publishers.pubid. --通过 left join 同样可以找出两张表 pubid 相同的数据.
+  select title,pubname from titles left join publishers using(pubid) -- 当两张表拥有相同的字段,可以通过 using 找到某个字段相同的数据.
+  select title,authorname from titles,rel_title_author,authors
+  where titles.titileid = rel_title_author.titleid and authors.authorid= rel_title_author.authorid order by title -- 三张表查询.
+  select authorname from author
+  union
+  select bookname from book --合并查询,两个 select 必须返回相同个数的字段. 并以第一个查询结果需要的字段进行展示命名.
+  select id as a_id, name,count(name) as a_name from author group by name; -- group by columnA 按 columnA 分类,相同数据将被合并,count(name)给出相同 value 统计数据.
+  ```
+
+  - 3. **更新,插入,删除操作**
+
+  ```sql
+  create table book_duplicate select * from book; -- 为 book 表创建一个备份.
+  mysqldump -u loginName -p dbname > backupfile --为整个数据库备份.
+  mysql -u loginName -p dbname  < backupfiel -- 为整个数据库恢复备份.
+  mysql -u root -p
+  create database dbname;
+  use dbname;
+  source backupfile;
+  insert into tablename(columnA,columnB,...) values('str',number,...);
+  select last_insert_id() --获取最后一次插入记录的 id
+  update tablename set columnA = value1,columnB = value2,...
+  where columnId = n ; --更新数据.
+  update tablename set columnA = value1 order by name limit 10; -- 根据 name 排序并对前 10 条数据进行更新.
+  update book,author,author_book set book.name='mysql_test',author.name='wenliujei_test' where book.id=author_book.book_id and author.id=author_book.author_id --关联表更新.
+
+  ```
+
 * ### <p id="3_2">高级 sql</p>
   **introduction _advanced sql_ here**
 
