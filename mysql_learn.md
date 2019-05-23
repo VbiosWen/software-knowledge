@@ -74,6 +74,16 @@ SELECT * FROM TABLE1 WHERE X IN (SELECT Y FROM TABLE2)
 - **全文搜索** 全文搜索(full-text search)简化并加快了对文本字段内单词的搜索操作.
 - **镜像复制** 镜像复制(_replication_) 允许数据库管理员把某个数据库的内容动态地复制到其他计算机中,这样做的理由有两个:避免因为系统故障而中断服务,二是为了加快数据库查询速度.
 - **事务** 事务是指把多个数据库操作当成一个整体(块)来对待.数据库确保操作要么全部执行要么全部不执行.即时在事务过程中出现停电,计算机崩溃或其它灾难事件发生也是如此.事务机制还可以让程序员安全地,及时地终止一组命令的执行(_并把数据库恢复到这组命令执行前的状态_) 目前 mysql 中只有 INNODB 支持事务机制.
+  - 1. **事务的四个概念**
+    - 1. Atomicity(原子性) 这意味着事务就像原子一样是不可分割的,数据库系统必须保证同一个事务里所有命令要么全部执行成功,要么都不会真正执行;即时系统发生崩溃也是如此.
+    - 2. Consistency(稳定性) 这意味着事务在执行成功之后数据库必须处于一个稳定可用的状态.如果数据库系统发现某个数据库里的数据违反了有关的数据合法性规则(也就是在数据库里出现了非法数据) 就会立刻中断并立刻撤销已经执行过的命令,把数据库恢复到这个事务开始执行之前的状态.
+    - 3. Isolation(隔离性) 这意味着多个任务可以同时独立运行,在执行过程中彼此不会干扰.每个事务看到的数据库在这个开始事务之前和结束之后的状态除了这个事务本身做的修改以外不会发生任何变化.换句话说,即使某一个事务插入,修改或删除了数据记录,只要这个事务没有被提交,与它同期进行的其它事务不会受到任何影响
+    - 4. Durability(可靠性) 这意味着事务本身必须能够经受住软硬件崩溃或其它意外故障.在故障消除后仍能执行.(_InnoDB 数据表驱动程序采用的是把所有修改先写入一个日志文件,如果系统在这些修改被实际写入数据库之前发生崩溃,在 MySQL 重启后InnoDB数据表驱动程序将利用那个日志文件重新构造所有修改 再传输给数据库.高可用性和高速度不可兼得,所以许多数据库系统采用了一个折中的方案.InnoDB数据表驱动程序在这方面的做法是提供一个innodb_flush_log_at_trx_commit选项,这个选项决定在什么时候才可以把事务保存到日志文件里._)
+  - 2. **事务的隔离模式**
+    - 1. READ_UNCOMMITIED select 命令在读取有关记录的时候会将 其他事务做出修改但未提交的数据展示出来.read uncommittied 不隔离 select 命令,但是隔离 update 命令
+    - 2. READ COMMITTED select 命令在读取有关记录是会把已经 commit命令提交过其他的事务做出的修改也考虑在内.这同样意味着同一个事务里完全一样的两条 select 命令可能有不同的结果.
+    - 3. REPEATABLE READ select 命令在执行的时候不把其他事务的修改考虑在内.这种隔离模式完全符合ACID 原则对select 命令的隔离要求.
+    - 4. SERIALIZABLE 这种隔离模式与 REPEATABLE READ 模式很相似,唯一的区别是这种模式会自动把普通的 select 命令也当做 select ... lock in share mode形式的命令执行并给受影响的数据记录统统加上一个共享锁.
 - **外键约束** 它们是程序员为了确保彼此关联的数据表里没有找不到目标的交叉引用而定义的一些规则.MySQL 系统中的 Innodb 数据表都支持外键约束.
 - **GIS 函数** MySQL 从 4.1 版本开始支持二维地理数据的存储和处理.因此 MySQL 适合用来开发 GIS (_Geographic Information System 地理信息系统_)应用程序
 - **程序设计语言** 在开发 MySQL 应用程序的时候,有一大批的 api(_application programming interface 应用编程接口_) 和软件开发库可供使用.本文只讨论 java.
@@ -338,9 +348,63 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
   ```
 
 * ### <p id="3_2">高级 sql</p>
-  **introduction _advanced sql_ here**
+
+  - 1. **创建数据表,数据库和索引**
+
+    ```sql
+    create database dbname; --创建数据库
+    create database dbname default character set latin1 collate latin1_general_ci; --创建数据库并指定默认的字符集和排序方式.
+    use dbname; -- 指定使用的数据库.
+    create [temporary] table [if not exits] tblname(
+         colname1 coltype coloptions refrence,
+         colname2 coltype coloptions refrence,...
+         [index1,index2,...]
+    )engine = InnoDB default charset = csname collate = colname --创建数据表 并指定使用的数据库类型,默认编码方式和默认排序方式.
+
+    create table computerbooks select * from titles where catid=1; --用查询结果创建一张表.
+
+    create index indexname on tablename(column); --创建一个普通索引. 此语句只能在建表时执行.
+    alter table tablename add [unique | fulltext | spatial] index indenxname; --创建索引
+    create [unique| fulltext | spetial ] index indexname on tablename(column); --创建索引
+    ```
+
+  - 2. **变更数据表结构**
+    ```sql
+    alter table titles change title title varchar(50) NOT NULL;--变更字段
+    alter table tablename add column type; --为数据表新增一个字段.
+    alter table tablename change oldcolumn newcolumn type;--修改数据表的一个字段.
+    alter table drop columnname;-- 删除一个数据列.
+    alter table tablename add primary key (indexcolus) --增加一个主键.
+    alter table tablename add index [indexname] (indexcolus) --创建一个普通索引
+    alter table tablename add unique [indexname] (indexcolus)--创建一个唯一索引
+    alter table tablename add foreign key [index_name] (column1) refrences table2(column) --增加一个外键约束条件.
+    alter table tablename drop primary key;--删除主键索引
+    alter table tablename drop index index_name;-- 删除一个普通索引
+    alter table tablename drop foreign key indexname -- 删除外键索引.
+    alter table tablename convert to character set charsetname; -- 修改数据表的字符集
+    drop table tablename; -- 删除数据表
+    drop database dbname; -- 删除数据库
+    ```
+  - 3. **show 命令**
+    ```sql
+    show columns from tablename; --展示 table所有的列以及属性
+    ```
 
 ## <p id="4">如何优化你的 sql?</p>
+
+- 1. **基本函数**
+
+  ```sql
+  concat(s1,s2,...) --合并字符串
+  select concat(coluname,',',columnname) from address; -- example
+  substr(columname,index,len) --截取字符串
+  select substr(columnname,1,10) from table author; --从第一位开始截取长度为 10 的字符串.
+  char_length(s) --返回字符串的长度.
+  IF(a,b,c) --对表达式求值,true 返回 b ,false 返回 c
+  select if(char_length(title) > 30,concat(left(title,20),'...',right(title,5)),title)
+  update mytable set column =replace(mycolun,'test','hahhh');--替换某个字段存储的值
+  select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
+  ```
 
 - ### <p id="4_1">创建一个索引</p>
   **introduction _index_ here**
