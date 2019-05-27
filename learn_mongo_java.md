@@ -8,7 +8,9 @@
   - ### [Simple management](#1_5)
   - ### [Other content](#1_6)
 
-## mongoDB is a document database.I want to tell you what i know :smile: give me :star:,thanks.
+## mongoDB is a document database.I want to tell you what I know. :smile: give me :star:,thanks.
+
+:smile: :bird: :love_hotel: :house: :hammer:
 
 - ## <p id="1">简介</p>
   mongodb 是一种强大,灵活,可扩展的数据存储方式.它扩展了关系型数据库众多有用的功能,如辅助索引,范围查询和排序.mongodb 的功能非常丰富,内置 mapreduce 式聚合支持.,以及对地理空间索引的支持.
