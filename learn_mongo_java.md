@@ -14,6 +14,12 @@
   - ### [Start up MongoDB](#2_4)
   - ### [MongoDB Shell](#2_5)
   - ### [Data Type](#2_6)
+- ## [Insert,Update and Delete document](#3)
+  - ### [Insert and save Document](#3_1)
+  - ### [Delete Document](#3_2)
+  - ### [Update Document](#3_3)
+  - ### [Instant Completion](#3_4)
+  - ### [Request and Connection](#3_5)
 
 ## mongoDB is a document database.I want to tell you what I know. :smile: give me :star:,thanks.
 
