@@ -7,6 +7,13 @@
   - ### [Without sacrificing speed](#1_4)
   - ### [Simple management](#1_5)
   - ### [Other content](#1_6)
+- ## [Elementary](#2)
+  - ### [Document](#2_1)
+  - ### [Collection](#2_2)
+  - ### [Database](#2_3)
+  - ### [Start up MongoDB](#2_4)
+  - ### [MongoDB Shell](#2_5)
+  - ### [Data Type](#2_6)
 
 ## mongoDB is a document database.I want to tell you what I know. :smile: give me :star:,thanks.
 
@@ -35,3 +42,73 @@
     MongoDB 尽量让服务器自治来简化数据库的管理.除了启动数据库之外,MongoDB,几乎没有必要的管理操作.MongoDB 尽可能的满足各种异常场景的自修复.
   - ### <p id="1_6">其他内容</p>
     继续看就知道啦 :love_hotel:
+- ## <p id="2">入门</p>
+  - 文档是 MongoDB 中的数据单元,类似于关系型数据库中的行(_但比行要复杂的多_).
+  - 集合可以看做是没有模式的表.
+  - MongoDB 单个实例可以容纳多个独立的数据库,每一个都有自己的集合和权限.
+  - MongoDB 自带简洁而功能强大的的 JavaScript shell,对于 MongoDB 的管理和操作非常强大.
+  - MongoDB 每个文档中都包含一个特殊的键 \_id,它在文档所处的集合中唯一.
+  - ### <p id="2_1">文档</p>
+    文档是 MongoDB 中的核心概念.多个键及其关联的值有序地放置在一起便是文档.例子
+    ```json
+    {"_id":ObjectId(""5a6a1d787c00f2a8e85f7a18"),"cid":NumberLong(50008898)}
+    ```
+    - 1. 文档中的键/值对是有序的,文档中的值不仅可以是字符串(_Default utf-8_),还可以是其他几种数据类型.文档中的键均是字符串.
+  - ### <p id="2_2">集合</p>
+    - 1. **无模式** 集合就是一组文档.类似于关系型数据库中的表.(_集合可以放置任何文档_),But,建议将同类型的集合放置在一个集合中,这样既容易分辨,又能有好的查询效率.
+    - 2. **命名**
+      1. 集合名不能是空字符串"".
+      1. 集合名不能含有\0 字符(空字符),这个字符表示集合名的结尾.
+      1. 集合名不能以"system."开头,这是系统保留前缀.
+      1. 用户创建的集合名字不能含有保留字符\$.
+         > 任何的骚操作建议都不要用,老老实实写个正常的名字吧.:alien:
+  - ### <p id="2_3">数据库</p>
+    MongoDB 中多个文档组成集合,集合组成数据库.一个 MongoDB 实例可以承载多个数据库,每个数据库都有独立的权限控制,即便在磁盘上,不同的数据库也放置在不同的文件中.建议将一个应用的所有数据都存储在一个数据库中.
+    > 数据库名也不要有骚操作.不然真出问题了,你就炸了.:imp:
+    > MongoDB 自带数据库:
+    - **admin**
+      从权限的角度看,这是"root"数据库.在这个数据库中,可以进行用户的添加删除,权限控制.
+    - **local**
+      这个数据库永远不会被复制,可以用来存储限于本地单台服务器的任意集合.
+    - **config**
+      当 MongoDB 用于分片设置时,config 在数据库内部使用,用于保存分片的相关信息.
+  - ### <p id="2_4">启动 MongoDB</p>
+    ```shell
+    $ ./mongod 启动 MongoDB,使用默认数据目录,端口号.
+    ```
+  - ### <p id="2_5">MongoDB shell</p>
+    MongoDB 自带一个 JavaScript shell,可以从命令行与 MongoDB 实例交互.这个 shell 非常有用,通过它可以执行管理操作,检查运行实例.
+  ```mongo
+  ./mongo --运行 mongo client
+  > x=200
+  > x/5;
+  40
+  > Math.sin(Math.PI/2) --调用 JavaScript 的库.
+  > new Date("2010/1/1")
+  > function factorial(n){
+    if(n <= 1 ) return 1;
+    return n * factorial(n-1);
+  }
+  > factorial(5) --定义 JavaScript 函数,并调用.
+  ```
+- ### <p id="2_6">数据类型</p>
+  - 1. **基本数据类型**
+       MongoDB 的文档类似于 json,在概念上和 JavaScript 中的对象神似.MongoDB 在保留 json 基本的键值对特性的基础上,添加了其他一些数据类型.
+    - 1.  null 用于表示空值或者不存在的字段.
+    - 2.  布尔 布尔类型有 true 和 false.
+    - 3.  32 位整数.
+    - 4.  64 位整数.
+    - 5.  64 位浮点数
+    - 6.  字符串
+    - 7.  符号
+    - 8.  对象 id
+    - 10. 日期
+    - 11. 正则表达式
+    - 12. 代码
+    - 13. 二进制数据
+    - 14. 最大值
+    - 15. 最小值
+    - 16. 未定义
+    - 17. 数组
+    - 18. 内嵌文档
+  - 2. **数字** JavaScript 只支持一种数字类型,但是 MongoDB 支持 3 中,所以建议不要再 MongoDB 自带的 shell 中使用这些东西.
