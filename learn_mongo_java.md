@@ -160,7 +160,18 @@
       db.users.update({query},{"$set":{"userName":"哇咔咔"}) -- 将查询出来的数据的 userName 都改为哇咔咔.
       db.users.update({query},{"$unset":{"userSex":1}}) --删除这个键,当然 value 也被删了.
       db.users.update({query},{"$inc":{"score":50}}) -- 跟查询到的 user 的分数加 50,清华北大不是梦. 只能作用于 number 类型.
-      db.users.update({query},{"$push":{"userCard":"ICBC"}}) -- 为用户添加一个银行卡.定个小目标.
+      db.users.update({query},{"$push":{"userCard":"ICBC"}}) -- 为用户添加一个银行卡.定个小目标,日赚一个亿 哇咔咔.
+      db.users.update({"money":{"$ne":"0"}},{"$push":{"money":"50000000000000000"}) -- 如果你的钱在库中为 0,你可以用这种方式把它加进去,而且是数组哦.
+      db.users.update({query},{"$addToSet":{"cardId":{"4232422424442442424"}}}) -- 如果你忘记了你的卡号是不是已经被保存在库中了,可以用这种方式将卡号再放进去一次,如果存在就不做任何操作,如果不存在就加一个卡号.真土豪,自己几张卡都记不清了.
+      db.users.update({query},{"$addToSet":{"cardId":{"$each":["cardId1","cardId2"]}}}) -- 如果你忘记的卡太多,就一次性这样玩吧.每一个不存在库中的卡号都能被添加哦.
+      db.users.update({query},{"cardId":{"$pop":{key:1}}})
+      -- 删除一个卡号,最近消费有点高啊,竟然把卡都刷废了.
+      db.users.update({query},{"$pull",{"cardId":1})
+      -- 删除匹配项,会将所有的匹配到的数据删除掉.
+      db.users.update({query},{"$inc":{"userInfo.0.money":1}})-- 数据数据里面包含 json,先找到数据的数组下标,然后找到对应字段,进行原子+1
+      db.users.update({query},{"$inc":{"cardId":"23231341414"}},true) --upsert 懂了吗?
+      db.users.update({query},{$set:{"gift":"Happy birthday"}},false,true) false 代表不是 upsert,不用插入文档,true 代表查到的都更新
       ```
-
-      
+    - **修改器速度**
+      有的修改器运行速度很快,例如 \$inc,因为不需要改变文档的大小,但是数组修改器更改了文档的大小,就会慢一些(_$set 能在文档大小不发生改变时立即修改,否则性能会有所下降._).
+      MongoDB 预留了一些补白给文档,来适应大小变化(_事实上,系统会根据文档通常的大小变化情况来相应的调整补白的大小._),但是要是超出了原来的预留空间,最后还是要分配新的空间.空间分配会减慢速度,也会随着数组变长,MongoDB 也会因为需要更长的时间遍历,对每个数组的修改也会慢下来.
