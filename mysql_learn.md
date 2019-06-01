@@ -384,6 +384,7 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
     alter table tablename convert to character set charsetname; -- 修改数据表的字符集
     drop table tablename; -- 删除数据表
     drop database dbname; -- 删除数据库
+    alter table table_name modify column column_name 类型;
     ```
   - 3. **show 命令**
     ```sql
