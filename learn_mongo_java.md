@@ -245,3 +245,31 @@
       > db.collectionname.update("\$push":{"fruit":"strawberry"},{"$inc":{"size":1}}) 可以使用一个键值维护数组的增减.
       > db.collectionName.find({query},{"key":{"\$slice":10}})指定字段返回数组的前 10 条数据.
       > db.collectionName.find({query},{"key":{"\$slice":[23,10]}}) 从第 23 个开始,向后查找 10 个.返回第 24~33 个元素.
+    - **查询内嵌文档**
+      > db.people.find({"name":{"first":"joe","last":"schmoe"}}) 查询整个内嵌文档,如果顺序不对,或者查询条件没有指定全部的键,就会造成查询不到.
+      > db.people.find({"name.first":"Joe","last":"Schmoe"})
+      > db.blog.find({"comments":{"\$elemMatch":{"author":"joe","score":{"\$gte":5}}}})
+  - ### <p id="4_4">\$where</p>
+    $where 可以执行 JavaScript 子句,没用过,不熟悉.效率很低,不建议使用,要先把 bson转换成 JavaScript 对象,然后通过\$where 的表达式运行.
+  - ### <p id="4_5">游标和游标内幕</p>
+    - **游标**
+      从 shell 中创建一个游标,首先要对集合填充一些文档,然后对其执行查询,并将结果分配给一个局部变量.
+      > var cursor = db.collection.find();
+      > 迭代结果:
+      ```JavaScript
+      while (cursor.hasNext()){
+      obj = cursor.next();
+      //do something.
+      }
+      // 游标还实现了迭代器接口,所以可以在 foreach循环中使用.
+      cursor.foreach(function(x){
+      //do something
+      });
+      ```
+      当调用 find 的时候,shell 并不会立即查询数据库,而是等待真正要求获得结果时才发送查询,这样在执行之前可以给查询附加额外的选项.基本上所有游标对象的方法都返回游标本身.
+    - **游标内幕**
+      看待游标有两种角度:客户端游标以及客户端游标表示的数据库游标.
+      在服务器端,游标消耗内存和其它资源.游标遍历尽结果后,或者客户端发送过来消息要求终止的,数据库将会释放这些资源.所以要尽量保证尽快释放游标.以下情况会导致游标终止并被清理:
+      1. 游标完成匹配结果的迭代时.
+      2. 游标在客户端已经不在作用域内了,驱动会向服务器发送专门的消息,让其销毁游标.
+      3. 即便用户没有迭代完成所有的结果,并且游标还在作用域内,10 分钟不使用,数据库游标也会自动销毁.
