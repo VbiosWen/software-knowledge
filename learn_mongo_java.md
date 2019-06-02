@@ -20,6 +20,12 @@
   - ### [Update Document](#3_3)
   - ### [Instant Completion](#3_4)
   - ### [Request and Connection](#3_5)
+- ## [Query](#4)
+  - ### [Find introduction](#4_1)
+  - ### [Query condition](#4_2)
+  - ### [Specific type of query](#4_3)
+  - ### [\$where query](#4_4)
+  - ### [Cursor and cursor inside](#4_5)
 
 ## mongoDB is a document database.I want to tell you what I know. :smile: give me :star:,thanks.
 
@@ -197,3 +203,45 @@
     数据库会每一个 MongoDB 数据连接创建一个队列,存放这个连接的请求.
     注意,每个连接都有单独的队列,要是有两个 shell ,就有两个数据库连接.在一个 shell 中执行插入,另一个不一定能够看到,But,in the same shell,you can see the data changes made by the last connection. (_但是,在同一个 shell 中,你可以看到上次连接对数据的更改._)
     使用 Java 连接池的时候要特别注意这个事情,因为连接池和服务器建立了多个连接,并将请求分散到这些连接中,好在提供了一些机制来确保一系列的请求均由一个连接来处理.
+
+- ## <p id="4">Query</p>
+  - ### <p id="4_1">find 简介</p>
+    MongoDB 中使用 find 进行查询.查询就是返回一个集合中文档的子集.
+    > db.collectionName.find({query});
+    - **指定返回的键**
+      > db.collectionName.find({query},{"userName":1,"email":1})
+      > db.collectionName.find({query},{"userName":0}) _排除某个键_
+    - **限制**
+      查询文档的值必须是常量.
+  - ### <p id="4_2">查询条件</p>
+    查询不仅能像前面说的那样精确匹配,还能匹配更复杂的查询条件,比如范围,or 子句和取反.
+    - **查询条件**
+      \$lt,\$lte,\$gt,和\$gte 都是全部的比较操作符,分别对应<,<= > and >= 可以组合起来以便查找一个范围的值.
+      > db.collectionName.find("key":{"\$gte":value(Integer/date/string/double),"\$lte":value(integer/date/string/double)})
+      > 对于文档的键值不等于某个特定值的情况下,就要使用另外一个条件操作符"\$ne"
+      > db.collectionName.find("key":{"\$ne":"value"/value}) _查询某个 key 的值不等于 value 的文档_
+    - **OR 查询**
+      MongoDB 中有两种方式进行 or 查询."\$in" 可以用来查询一个键的多个值,"\$or"更通用一些,用来完成多个键值的任意给定值.
+      > db.collectionName.find({"key":{"$in":[value1,value2,value3]}}) _查询某个 key 的 value 是否是其中一个,并返回符合条件的文档._
+      > db.collectionName.find({"key":{"\$nin":[value1,value2,value3]}}) _查询某个 key 不包含这些 value 的文档._
+      > db.collectionName.find({"\$or":[{"key1":"value1"},{"key2":"value2"}])
+    - **\$not 查询**
+      \$not 是元条件句,可以用在任何其他条件之上,
+      > db.users.find({"key":{"\$not":value})
+  - ### <p id="4_3">特定于类型的查询</p>
+    - **null**
+      null 不仅会匹配值为 null 的文档,还会匹配不存在这个键的文档.
+      如果仅仅是想要匹配值为 null 的文档,还要判断当前键是否存在
+      > db.c.find({"key":null})
+      > db.c.find({"key":{"\$in":[null],"\$exists":true}})
+    - **正则表达式**
+      正则表达式能够灵活有效地匹配字符串.
+      > db.collectionName.find({"key":regular})
+    - **查询数组**
+      查询数组中的元素非常简单.
+      > db.collectionName.find({"key":"value"})
+      > db.collectionName.find({"key":{"\$all":["value1","value2"]}}) 查询包含所有值的文档.
+      > db.collectionName.find({"key":{"\$size":Integer}}) 查询指定长度的数组,但不能与范围查找共同使用.
+      > db.collectionname.update("\$push":{"fruit":"strawberry"},{"$inc":{"size":1}}) 可以使用一个键值维护数组的增减.
+      > db.collectionName.find({query},{"key":{"\$slice":10}})指定字段返回数组的前 10 条数据.
+      > db.collectionName.find({query},{"key":{"\$slice":[23,10]}}) 从第 23 个开始,向后查找 10 个.返回第 24~33 个元素.
