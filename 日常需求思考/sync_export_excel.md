@@ -5,12 +5,4 @@
 ## 2. 技术方案设计(初稿)
 
 刚开始想着直接在 web 端开个线程池,直接在线程池的异步调用.搭建一个专门为 IO 操作频繁提供解决方案的服务. 刚开始设计的方案为:
-
-```mermaid
-
-graph LR
-A --> B
-B --> c
-c --> A
-
-```
+![异步导出 excel](./images/async_export_excel.png)
