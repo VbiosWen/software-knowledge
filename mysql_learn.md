@@ -347,9 +347,9 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
 
   ```
 
-* ### <p id="3_2">高级 sql</p>
+  - ### <p id="3_2">高级 sql</p>
 
-  - 1. **创建数据表,数据库和索引**
+    - 1. **创建数据表,数据库和索引**
 
     ```sql
     create database dbname; --创建数据库
@@ -368,7 +368,7 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
     create [unique| fulltext | spetial ] index indexname on tablename(column); --创建索引
     ```
 
-  - 2. **变更数据表结构**
+    - 2. **变更数据表结构**
     ```sql
     alter table titles change title title varchar(50) NOT NULL;--变更字段
     alter table tablename add column type; --为数据表新增一个字段.
@@ -386,14 +386,14 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
     drop database dbname; -- 删除数据库
     alter table table_name modify column column_name 类型;
     ```
-  - 3. **show 命令**
+    - 3. **show 命令**
     ```sql
     show columns from tablename; --展示 table所有的列以及属性
     ```
 
 ## <p id="4">如何优化你的 sql?</p>
 
-- 1. **基本函数**
+   - 1. **基本函数**
 
   ```sql
   concat(s1,s2,...) --合并字符串
@@ -407,14 +407,14 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
   select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
   ```
 
-- ### <p id="4_1">创建一个索引</p>
+  - ### <p id="4_1">创建一个索引</p>
   **introduction _index_ here**
-- ### <p id="4_2">如何使用表关系</p>
+  - ### <p id="4_2">如何使用表关系</p>
   **introduction _table relationships_ here**
-- ### <p id="4_3">小心你的查询</p>
+  - ### <p id="4_3">小心你的查询</p>
   **introduction _query problem_ here**
 
-## <p id="5">使用 java 管理你的 MySQL</p>
+- ## <p id="5">使用 java 管理你的 MySQL</p>
 
 - ### <p id="5_1">java 连接 mysql</p>
 
@@ -435,10 +435,8 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
 
   **获取连接**
 
-  ```java
-  Connection connection = null;
-  ```
-
+    ```java
+    Connection connection = null;
 
     String url = "jdbc:mysql://localhost:3307/botserver";
 
@@ -481,10 +479,12 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
       e.printStackTrace();
     }
 
-````
-**获取所有表和字段名称**
-```java
- try {
+  ```
+
+  **获取所有表和字段名称**
+
+  ```java
+   try {
 
     if(connection.isClosed()){
       System.exit(-1);
@@ -524,9 +524,50 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
       e.printStackTrace();
     }
   }
-````
-
-**write your java code here**
+  ```
 
 - ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
-  **write your java code here**
+  - **insert**
+    不是预处理,有可能出现 sql 注入问题.
+    ```java
+     try {
+      connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+      connection.setAutoCommit(false);
+      Statement statement = connection.createStatement();
+      String sql = "insert into author(name,homeland) values('vbiso','rollback')";
+      statement.execute(sql);
+      String sql1 = "insert into author(name,homeland) values('vbiso','rollbakc1')";
+      statement.execute(sql1);
+      int a = 1/0; //在 commit 执行之前抛出运行时异常事务不会提交,在 commit 执行之后抛出运行时异常事务会提交.
+      //因为设置了 autoCommit 为 false 所以要主动提交.
+      connection.commit();
+
+    } catch (SQLException e) {
+      try {
+        connection.rollback();
+      } catch (SQLException ex) {
+        ex.printStackTrace();
+      }
+      e.printStackTrace();
+    }
+    ```
+    自动提交,每个操作是一个事务,在多事务情况下不要使用
+    ```java
+     try {
+      connection.setAutoCommit(true);
+      Statement statement = connection.createStatement();
+      String sql = "insert into author(name,homeland) values('vbiso','autoCommit')";
+      boolean execute = statement.execute(sql);
+      System.out.println(execute);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        if (!connection.isClosed()) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
+    ```
