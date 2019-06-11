@@ -454,12 +454,9 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     if (!connection.isClosed()) {
       System.out.println("Succeeded connecting to the database");
     }
-
     connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 
     connection.setAutoCommit(false);
-  ```
-
 
       Statement statement = connection.createStatement();
 
@@ -483,13 +480,10 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
       }
       e.printStackTrace();
     }
-
-````
-
+  ```
 **获取所有表和字段名称**
-
-```java
- try {
+  ```java
+  try {
 
   if(connection.isClosed()){
     System.exit(-1);
@@ -520,16 +514,16 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     System.out.println("-------------------------------------");
   }
 
-} catch (SQLException e) {
+  } catch (SQLException e) {
   e.printStackTrace();
-}finally {
+  }finally {
   try {
     this.connection.close();
   } catch (SQLException e) {
     e.printStackTrace();
   }
-}
-````
+ }
+  ```
 
 - ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
 
