@@ -369,6 +369,7 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
     ```
 
     - 2. **变更数据表结构**
+
     ```sql
     alter table titles change title title varchar(50) NOT NULL;--变更字段
     alter table tablename add column type; --为数据表新增一个字段.
@@ -386,32 +387,35 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
     drop database dbname; -- 删除数据库
     alter table table_name modify column column_name 类型;
     ```
+
     - 3. **show 命令**
+
     ```sql
     show columns from tablename; --展示 table所有的列以及属性
     ```
 
 ## <p id="4">如何优化你的 sql?</p>
 
-   - 1. **基本函数**
+- 1.  **基本函数**
 
-  ```sql
-  concat(s1,s2,...) --合并字符串
-  select concat(coluname,',',columnname) from address; -- example
-  substr(columname,index,len) --截取字符串
-  select substr(columnname,1,10) from table author; --从第一位开始截取长度为 10 的字符串.
-  char_length(s) --返回字符串的长度.
-  IF(a,b,c) --对表达式求值,true 返回 b ,false 返回 c
-  select if(char_length(title) > 30,concat(left(title,20),'...',right(title,5)),title)
-  update mytable set column =replace(mycolun,'test','hahhh');--替换某个字段存储的值
-  select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
-  ```
+```sql
+concat(s1,s2,...) --合并字符串
+select concat(coluname,',',columnname) from address; -- example
+substr(columname,index,len) --截取字符串
+select substr(columnname,1,10) from table author; --从第一位开始截取长度为 10 的字符串.
+char_length(s) --返回字符串的长度.
+IF(a,b,c) --对表达式求值,true 返回 b ,false 返回 c
+select if(char_length(title) > 30,concat(left(title,20),'...',right(title,5)),title)
+update mytable set column =replace(mycolun,'test','hahhh');--替换某个字段存储的值
+select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
+```
 
-  - ### <p id="4_1">创建一个索引</p>
+- ### <p id="4_1">创建一个索引</p>
   **introduction _index_ here**
-  - ### <p id="4_2">如何使用表关系</p>
+- ### <p id="4_2">如何使用表关系</p>
   **introduction _table relationships_ here**
-  - ### <p id="4_3">小心你的查询</p>
+- ### <p id="4_3">小心你的查询</p>
+
   **introduction _query problem_ here**
 
 - ## <p id="5">使用 java 管理你的 MySQL</p>
@@ -435,25 +439,26 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
 
   **获取连接**
 
-    ```java
-    Connection connection = null;
+  ```java
+  Connection connection = null;
 
-    String url = "jdbc:mysql://localhost:3307/botserver";
+  String url = "jdbc:mysql://localhost:3307/botserver";
 
-    String user = "root";
+  String user = "root";
 
-    String password = "root";
+  String password = "root";
 
-    try {
-      connection = DriverManager.getConnection(url, user, password);
+  try {
+    connection = DriverManager.getConnection(url, user, password);
 
-      if (!connection.isClosed()) {
-        System.out.println("Succeeded connecting to the database");
-      }
+    if (!connection.isClosed()) {
+      System.out.println("Succeeded connecting to the database");
+    }
 
-      connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+    connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
 
-      connection.setAutoCommit(false);
+    connection.setAutoCommit(false);
+  ```
 
 
       Statement statement = connection.createStatement();
@@ -479,81 +484,83 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
       e.printStackTrace();
     }
 
-  ```
+````
 
-  **获取所有表和字段名称**
+**获取所有表和字段名称**
 
-  ```java
-   try {
+```java
+ try {
 
-    if(connection.isClosed()){
-      System.exit(-1);
+  if(connection.isClosed()){
+    System.exit(-1);
+  }
+
+  DatabaseMetaData metaData = connection.getMetaData();
+
+  ResultSet tables = metaData.getTables(null, null, null, new String[]{"TABLE"});
+  while (tables.next()){
+    //table belong database
+    System.out.println(tables.getString(1));
+    //table schema 表模式
+    System.out.println(tables.getString(2));
+    // table name
+    System.out.println(tables.getString(3));
+    // table type table | view  and so on.
+    System.out.println(tables.getString(4));
+
+    //获取表中的所有字段信息
+    ResultSet columns = metaData.getColumns(null, "%", tables.getString(3), "%");
+    while (columns.next()){
+      System.out.println(columns.getString("COLUMN_NAME"));
+      System.out.println(columns.getString("TYPE_NAME"));
+      System.out.println(columns.getInt("DATA_TYPE"));
+      System.out.println(columns.getString("IS_AUTOINCREMENT"));
+
     }
+    System.out.println("-------------------------------------");
+  }
 
-    DatabaseMetaData metaData = connection.getMetaData();
-
-    ResultSet tables = metaData.getTables(null, null, null, new String[]{"TABLE"});
-    while (tables.next()){
-      //table belong database
-      System.out.println(tables.getString(1));
-      //table schema 表模式
-      System.out.println(tables.getString(2));
-      // table name
-      System.out.println(tables.getString(3));
-      // table type table | view  and so on.
-      System.out.println(tables.getString(4));
-
-      //获取表中的所有字段信息
-      ResultSet columns = metaData.getColumns(null, "%", tables.getString(3), "%");
-      while (columns.next()){
-        System.out.println(columns.getString("COLUMN_NAME"));
-        System.out.println(columns.getString("TYPE_NAME"));
-        System.out.println(columns.getInt("DATA_TYPE"));
-        System.out.println(columns.getString("IS_AUTOINCREMENT"));
-
-      }
-      System.out.println("-------------------------------------");
-    }
-
+} catch (SQLException e) {
+  e.printStackTrace();
+}finally {
+  try {
+    this.connection.close();
   } catch (SQLException e) {
     e.printStackTrace();
-  }finally {
-    try {
-      this.connection.close();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
   }
-  ```
+}
+````
 
 - ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
+
   - **insert**
     不是预处理,有可能出现 sql 注入问题.
+
     ```java
-     try {
+    try {
+      //可重复读
       connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+      //设置非自动提交
       connection.setAutoCommit(false);
       Statement statement = connection.createStatement();
       String sql = "insert into author(name,homeland) values('vbiso','rollback')";
       statement.execute(sql);
       String sql1 = "insert into author(name,homeland) values('vbiso','rollbakc1')";
       statement.execute(sql1);
-      int a = 1/0; //在 commit 执行之前抛出运行时异常事务不会提交,在 commit 执行之后抛出运行时异常事务会提交.
-      //因为设置了 autoCommit 为 false 所以要主动提交.
+      int a = 1 / 0; //在 commit 执行之前抛出运行时异常事务不会提交,在 commit 执行之后抛出运行时异常事务会提交.
       connection.commit();
 
     } catch (SQLException e) {
-      try {
-        connection.rollback();
-      } catch (SQLException ex) {
-        ex.printStackTrace();
-      }
       e.printStackTrace();
+    }finally {
+      closeConnection();
     }
     ```
+
     自动提交,每个操作是一个事务,在多事务情况下不要使用
+
     ```java
-     try {
+      try {
       connection.setAutoCommit(true);
       Statement statement = connection.createStatement();
       String sql = "insert into author(name,homeland) values('vbiso','autoCommit')";
@@ -562,12 +569,131 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
     } catch (SQLException e) {
       e.printStackTrace();
     } finally {
+      closeConnection();
+    }
+    ```
+
+    预处理执行 insert,防止 sql 注入,内置了防止 sql 注入的手段.预编译,就是服务器校验 SQL 语句的语法格式是否正确,然后把 sql 语句编译成可执行的函数,最后才是执行 SQL 语句.
+    预编译语句执行过程:
+    prepare myfun from 'insert into author(name,homeland) values(?,?)';
+    set @str1='vbiso';
+    set @str2='hahah';
+    execute myfun using @str1,@str2;
+    同时预编译语句也能优化 curd 操作,预编译语句只有再第一次的时候会进行预编译操作,下次执行的时候只需要替换对应的值就 👌 了.
+
+    ```java
+     try {
+      String sql = "insert into author(name,homeland) values(?,?)";
+      PreparedStatement preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setString(1, "vbiso");
+      preparedStatement.setString(2, "hahhah");
+      preparedStatement.execute();
+    } catch (SQLException se) {
+      se.printStackTrace();
+    }finally {
+      closeConnection();
+    }
+
+    ```
+
+    简单 sql 注入语句,预编译语句会将这条语句变成:delete from author where name ='vbiso or 1=1';
+    这样这个 sql 语句在执行时查询条件就会被当做一个字符串执行.
+
+    ```java
+    //删除
+     try {
+      connection.setAutoCommit(true);
+      String sql = "delete from author where name = ?";
+      PreparedStatement preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setString(1, "'vbiso' or 1=1");
+      preparedStatement.execute();
+    } catch (SQLException se) {
+     se.printStackTrace();
+    }finally {
+      closeConnection();
+    }
+    ```
+
+    **prepare 预编译的方式能很好的优化 sql 性能,所以建议在 curd 操作时都使用预编译的方式去做**
+
+    ```java
+    //查询
+    try {
+      connection.setAutoCommit(true);
+      String sql = "select id,name,homeland from author limit ?,?";
+      PreparedStatement preparedStatement = connection
+          .prepareStatement(sql, new String[]{"id", "name", "homeland"});
+      preparedStatement.setInt(1, 0);
+      preparedStatement.setInt(2, 50);
+      ResultSet resultSet = preparedStatement.executeQuery();
+      List<author> authors = new ArrayList<>();
+      while (resultSet.next()) {
+        author author = new author();
+        author.setId(resultSet.getLong("id"));
+        author.setHomeland(resultSet.getString("homeland"));
+        author.setName(resultSet.getString("name"));
+        authors.add(author);
+      }
+      authors.forEach(System.out::println);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    } finally {
+      closeConnection();
+    }
+    ```
+
+    ```java
+    //事务提交
+     Savepoint savepoint = null;
+    try {
+      connection.setAutoCommit(false);
+      connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+
+      String sql = "insert into author(name,homeland) values(?,?)";
+      PreparedStatement preparedStatement = connection.prepareStatement(sql);
+      preparedStatement.setString(1,"testTransaction");
+      preparedStatement.setString(2,"transaction");
+      preparedStatement.executeUpdate();
+
+      String update = "update author set name = ? where name = ?";
+      PreparedStatement preparedStatement1 = connection.prepareStatement(update);
+      preparedStatement1.setString(1,"updateTransaction");
+      preparedStatement1.setString(2,"testTransaction");
+      preparedStatement1.executeUpdate();
+
+      savepoint = connection.setSavepoint();
+
+      String select = "select * from author id =1";
+      PreparedStatement preparedStatement2 = connection.prepareStatement(select);
+      ResultSet resultSet = preparedStatement2.executeQuery();
+
+    } catch (SQLException e) {
       try {
-        if (!connection.isClosed()) {
-          connection.close();
-        }
-      } catch (SQLException e) {
-        e.printStackTrace();
+        connection.rollback(savepoint);
+      } catch (SQLException ex) {
       }
     }
+    try {
+      connection.commit();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }finally {
+      closeConnection();
+    }
+    ```
+
+    ```sql
+    -- sql事务提交
+    set autocommit = 0; -- autoCommit is false
+
+    start transaction ; -- begin a transaction
+
+    insert into author(name, homeland) values ('tetsts','test'); --insert data
+
+    insert into author(name, homeland) values ('testteee','tesddavs'); --insert data
+    savepoint x; -- set rollback location
+
+    select * from author where id= 1000; -- query by select.
+    rollback to x; -- if commit transaction error, rollback to save point.
+    select * from author;  -- query select. 
     ```
