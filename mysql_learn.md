@@ -417,6 +417,116 @@ FOREIGN KEY [NAME] (column) REFERENCES table2(column2)
 ## <p id="5">使用 java 管理你的 MySQL</p>
 
 - ### <p id="5_1">java 连接 mysql</p>
-  **write your java code here**
+
+  **加载驱动**
+
+  ```java
+  static String driver = "com.mysql.jdbc.Driver";
+
+  static {
+    try {
+      Class.forName(driver);
+    } catch (ClassNotFoundException e) {
+      System.exit(1);
+    }
+  }
+
+  ```
+
+  **获取连接**
+
+  ```java
+  Connection connection = null;
+  ```
+
+
+    String url = "jdbc:mysql://localhost:3307/botserver";
+
+    String user = "root";
+
+    String password = "root";
+
+    try {
+      connection = DriverManager.getConnection(url, user, password);
+
+      if (!connection.isClosed()) {
+        System.out.println("Succeeded connecting to the database");
+      }
+
+      connection.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+
+      connection.setAutoCommit(false);
+
+
+      Statement statement = connection.createStatement();
+
+      String sql = "select * from book";
+
+      ResultSet resultSet = statement.executeQuery(sql);
+
+      while (resultSet.next()){
+        System.out.println(resultSet.getLong("id"));
+        System.out.println(resultSet.getString("name"));
+      }
+
+      connection.commit();
+      resultSet.close();
+      statement.close();
+      connection.close();
+
+    } catch (SQLException e) {
+      if(Objects.nonNull(connection)) {
+        connection.rollback();
+      }
+      e.printStackTrace();
+    }
+
+````
+**获取所有表和字段名称**
+```java
+ try {
+
+    if(connection.isClosed()){
+      System.exit(-1);
+    }
+
+    DatabaseMetaData metaData = connection.getMetaData();
+
+    ResultSet tables = metaData.getTables(null, null, null, new String[]{"TABLE"});
+    while (tables.next()){
+      //table belong database
+      System.out.println(tables.getString(1));
+      //table schema 表模式
+      System.out.println(tables.getString(2));
+      // table name
+      System.out.println(tables.getString(3));
+      // table type table | view  and so on.
+      System.out.println(tables.getString(4));
+
+      //获取表中的所有字段信息
+      ResultSet columns = metaData.getColumns(null, "%", tables.getString(3), "%");
+      while (columns.next()){
+        System.out.println(columns.getString("COLUMN_NAME"));
+        System.out.println(columns.getString("TYPE_NAME"));
+        System.out.println(columns.getInt("DATA_TYPE"));
+        System.out.println(columns.getString("IS_AUTOINCREMENT"));
+
+      }
+      System.out.println("-------------------------------------");
+    }
+
+  } catch (SQLException e) {
+    e.printStackTrace();
+  }finally {
+    try {
+      this.connection.close();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+  }
+````
+
+**write your java code here**
+
 - ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
   **write your java code here**
