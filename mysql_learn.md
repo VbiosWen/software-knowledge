@@ -481,7 +481,9 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
       e.printStackTrace();
     }
   ```
-**获取所有表和字段名称**
+
+  **获取所有表和字段名称**
+
   ```java
   try {
 
@@ -522,7 +524,7 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
   } catch (SQLException e) {
     e.printStackTrace();
   }
- }
+  }
   ```
 
 - ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
@@ -688,6 +690,6 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     savepoint x; -- set rollback location
 
     select * from author where id= 1000; -- query by select.
-    rollback to x; -- if commit transaction error, rollback to save point.
-    select * from author;  -- query select. 
+    rollback to x; -- if commit transaction error, rollback from save point.
+    select * from author;  -- query select.
     ```
