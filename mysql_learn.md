@@ -707,6 +707,10 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     write your sql here.
     ```
   - ### <p id="6_2">常用 mysql 管理命令</p>
-    ```sql
-    write your sql management statement here.
+    ```shell
+    mysqldump -u username -p dbname [tablename] > backup.sql -- 备份数据库,可以选择导出哪张表.
+    mysqldump -t -u root -p employees employees > insert.sql  -- 只导出插入语句
+    mysqldump --opt  -d employees -uroot -p > tables.sql --只导出表结构
+    mysql -u root -p employees < tables.sql --执行创建表语句
+    mysql -u root -p employees < insert.sql --执行插入数据语句
     ```
