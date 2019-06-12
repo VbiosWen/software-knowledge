@@ -19,6 +19,9 @@
 - ## [Use java to manage your mysql](#5)
   - ### [connect by java](#5_1)
   - ### [use transaction by java to manage you crud](#5_2)
+- ## [Appendix](#6)
+  - ### [Common query](#6_1)
+  - ### [Common mysql management statement](#6_2)
 
 # Give me :+1:. Thanks
 
@@ -571,12 +574,14 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
 
     预处理执行 insert,防止 sql 注入,内置了防止 sql 注入的手段.预编译,就是服务器校验 SQL 语句的语法格式是否正确,然后把 sql 语句编译成可执行的函数,最后才是执行 SQL 语句.
     预编译语句执行过程:
+
     ```sql
     prepare myfun from 'insert into author(name,homeland) values(?,?)';
     set @str1='vbiso';
     set @str2='hahah';
     execute myfun using @str1,@str2;
     ```
+
     同时预编译语句也能优化 curd 操作,预编译语句只有再第一次的时候会进行预编译操作,下次执行的时候只需要替换对应的值就 👌 了.
 
     ```java
@@ -694,4 +699,14 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     select * from author where id= 1000; -- query by select.
     rollback to x; -- if commit transaction error, rollback from save point.
     select * from author;  -- query select.
+    ```
+
+- ## <p id="6">附录</p>
+  - ### <p id="6_1">常用查询</p>
+    ```sql
+    write your sql here.
+    ```
+  - ### <p id="6_2">常用 mysql 管理命令</p>
+    ```sql
+    write your sql management statement here.
     ```
