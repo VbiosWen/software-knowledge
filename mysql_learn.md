@@ -704,7 +704,9 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
 - ## <p id="6">附录</p>
   - ### <p id="6_1">常用查询</p>
     ```sql
-    write your sql here.
+    create database vbiso_test default character set utf8mb4 collate utf8mb4_general_ci --创建数据库并指定编码方式.
+    create table()ENGINE = InnoDB default charset utf8mb4 collate utf8mb4_general_ci
+
     ```
   - ### <p id="6_2">常用 mysql 管理命令</p>
     ```shell
