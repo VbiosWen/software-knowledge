@@ -22,6 +22,8 @@
 - ## [Appendix](#6)
   - ### [Common query](#6_1)
   - ### [Common mysql management statement](#6_2)
+- ## [Data table design ideas](#7)
+  - ### [Counting table](#7_1)
 
 # Give me :+1:. Thanks
 
@@ -414,7 +416,32 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
 ```
 
 - ### <p id="4_1">创建一个索引</p>
-  **introduction _index_ here**
+  **_introduction_**
+  索引是存储引擎用于快速找到记录的一种数据结构.索引优化是对查询优化最有效的手段. mysql 中默认使用的 B+ tree 索引.
+  ```sql
+  create index index_name on tablename(column); --创建普通索引
+  create unique index employees_first_name_index on employees(first_name); --创建唯一索引
+  ```
+  B-tree 索引适合全键值索引,键值范围和键前缀查找.其中键前缀查找只适用于最左前缀查找.
+  以 index( last_name,first_name,birth_date) 为例
+  - 1. 全值匹配 和索引中的所有列进行匹配 where name = 'vbiso' and birth_date = '1960-01-01 01:01:01' 
+  - 2. 最左前缀 查找 name = 'vbiso' 的列.即只索引索引的第一列
+  - 3. 匹配列前缀 查找 name = 'vib%' 的列,即 name 的前几个字符.
+  - 4. 匹配范围值 查找 vbiso 和 wlj 之间的值.
+  - 5. 精确破匹配某一列和范围匹配另外一列
+  - 6. 只访问索引的查询 查询只需要访问索引,无需访问数据行.
+  B+ tree 索引限制:
+  - 1. 如果不是按照索引的最左列开始查找,即无法使用索引.
+  - 2. 不能跳过索引中的列 即无法查找 last_name birth_date 的行.
+  支持的索引只有 last_name first_name ,last_name,last_name,first_name,birth_date
+  - 3. 如果查询中有某个列的范围查询,则其右边所有列都无法使用索引优化查找. example: where last_name= 'smith' and first_name = 'j%' and birth_date= '1998-12-23' 这个查询只能使用索引的前两列.因为这里like 是个范围条件
+  **索引的优点**
+  - 1. 索引可以减少服务器需要扫描的数据量.
+  - 2. 索引可以帮助服务器避免排序和临时表.
+  - 3. 索引可以将随机 io 变为顺序 io. 
+
+
+
 - ### <p id="4_2">如何使用表关系</p>
   **introduction _table relationships_ here**
 - ### <p id="4_3">小心你的查询</p>
@@ -702,12 +729,15 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     ```
 
 - ## <p id="6">附录</p>
+
   - ### <p id="6_1">常用查询</p>
+
     ```sql
     create database vbiso_test default character set utf8mb4 collate utf8mb4_general_ci --创建数据库并指定编码方式.
-    create table()ENGINE = InnoDB default charset utf8mb4 collate utf8mb4_general_ci
+    create table if not exists tablename()ENGINE = InnoDB default charset utf8mb4 collate utf8mb4_general_ci --创建数据表
 
     ```
+
   - ### <p id="6_2">常用 mysql 管理命令</p>
     ```shell
     mysqldump -u username -p dbname [tablename] > backup.sql -- 备份数据库,可以选择导出哪张表.
@@ -715,4 +745,27 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     mysqldump --opt  -d employees -uroot -p > tables.sql --只导出表结构
     mysql -u root -p employees < tables.sql --执行创建表语句
     mysql -u root -p employees < insert.sql --执行插入数据语句
+    ```
+
+- ## <p id="7">数据表设计思考</p>
+  - ### <p id="7_1">计数表</p>
+    计数器表
+    ```sql
+    create table if not exists hit_counter(
+      cnt int unsigned not null
+    )engine = InnoDB;
+    --每次点击
+     update hit_counter set cnt = cnt+1;
+    ```
+    这种方式的计数表会导致在并发情况下事务因为拥有一个行锁,而导致事务串行执行,影响了效率.
+    **优化方案**
+    ```sql
+    create table if not exists hit_counter (
+      cnt int unsigned not null,
+      slot tinyint unsigned not null primary key
+    )Engine = InnoDB
+    -- 然后预先在表中插入 100 行数据,然后随机选择一个槽进行更新
+    update hit_counter set cnt = cnt + 1 where slot = rand() * 100
+    --获得统计结果,可以使用聚合查询
+    select sum(cnt) from hit_counter;
     ```
