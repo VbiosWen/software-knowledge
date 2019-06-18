@@ -416,41 +416,66 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
 ```
 
 - ### <p id="4_1">创建一个索引</p>
-  **_introduction_**
-  索引是存储引擎用于快速找到记录的一种数据结构.索引优化是对查询优化最有效的手段. mysql 中默认使用的 B+ tree 索引.
+  - 1. **_introduction_**
+       索引是存储引擎用于快速找到记录的一种数据结构.索引优化是对查询优化最有效的手段. mysql 中默认使用的 B+ tree 索引.
   ```sql
   create index index_name on tablename(column); --创建普通索引
   create unique index employees_first_name_index on employees(first_name); --创建唯一索引
   ```
-  B-tree 索引适合全键值索引,键值范围和键前缀查找.其中键前缀查找只适用于最左前缀查找.
-  以 index( last_name,first_name,birth_date) 为例
-  - 1. 全值匹配 和索引中的所有列进行匹配 where name = 'vbiso' and birth_date = '1960-01-01 01:01:01' 
-  - 2. 最左前缀 查找 name = 'vbiso' 的列.即只索引索引的第一列
-  - 3. 匹配列前缀 查找 name = 'vib%' 的列,即 name 的前几个字符.
-  - 4. 匹配范围值 查找 vbiso 和 wlj 之间的值.
-  - 5. 精确破匹配某一列和范围匹配另外一列
-  - 6. 只访问索引的查询 查询只需要访问索引,无需访问数据行.
-  B+ tree 索引限制:
-  - 1. 如果不是按照索引的最左列开始查找,即无法使用索引.
-  - 2. 不能跳过索引中的列 即无法查找 last_name birth_date 的行.
-  支持的索引只有 last_name first_name ,last_name,last_name,first_name,birth_date
-  - 3. 如果查询中有某个列的范围查询,则其右边所有列都无法使用索引优化查找. example: where last_name= 'smith' and first_name = 'j%' and birth_date= '1998-12-23' 这个查询只能使用索引的前两列.因为这里like 是个范围条件
-  **索引的优点**
-  - 1. 索引可以减少服务器需要扫描的数据量.
-  - 2. 索引可以帮助服务器避免排序和临时表.
-  - 3. 索引可以将随机 io 变为顺序 io. 
+  - 2. B-tree 索引适合全键值索引,键值范围和键前缀查找.其中键前缀 查找只适用于最左前缀查找.
+       以 index( last_name,first_name,birth_date) 为例
+    - 1. 全值匹配 和索引中的所有列进行匹配 where name = 'vbiso' and birth_date = '1960-01-01 01:01:01'
+    - 2. 最左前缀 查找 name = 'vbiso' 的列.即只索引索引的第一列
+    - 3. 匹配列前缀 查找 name = 'vib%' 的列,即 name 的前几个字符.
+    - 4. 匹配范围值 查找 vbiso 和 wlj 之间的值.
+    - 5. 精确破匹配某一列和范围匹配另外一列
+    - 6. 只访问索引的查询 查询只需要访问索引,无需访问数据行.
+         B+ tree 索引限制:
+    - 1. 如果不是按照索引的最左列开始查找,即无法使用索引.
+    - 2. 不能跳过索引中的列 即无法查找 last_name birth_date 的行.支持的索引只有 last_name first_name ,last_name,last_name,first_name,birth_date
+    - 3. 如果查询中有某个列的范围查询,则其右边所有列都无法使用索引优化查找. example: where last_name= 'smith' and first_name = 'j%' and birth_date= '1998-12-23' 这个查询只能使用索引的前两列.因为这里 like 是个范围条件
+  - 3. **索引的优点**
+    - 1. 索引可以减少服务器需要扫描的数据量.
+    - 2. 索引可以帮助服务器避免排序和临时表.
+    - 3. 索引可以将随机 io 变为顺序 io.
+  - 4. **索引合并策略**
+    - 1. 当出现服务器对多个索引进行相交操作时(_通常有多个 and 条件_).通常以为着需要一个包含所有相关列的多列索引,而不是多个独立的单列索引.
+    - 2. 当服务器需要对多个索引做联合操作时(通常有多个 or 条件),通常需要耗费大量的 cpu 和内存资源在算法和缓存,排序和合并操作上.尤其是当其中有些索引的选择性不高,需要合并扫描返回的大量数据的时候.
+  - 5. **选择合适的索引列顺序**
+    - 1.  在一个多列 B-TREE 索引中,索引列的顺序意味着索引首先按照 最左列进行排序,其次是第二列.所以,索引可以按照升序或者降序进 行扫描,以满足精确符合列顺序的 order by,group by 和 distinct 等子句的查询需求.
+    - 2. 将选择性最高的列放到索引最前列.such as :
+    ```sql
+    SELECT * FROM PAYMENT WHERE staff_id = 2 AND customer_id = 584;
+    ```
+    这种情况下,是应该创建(staff_id,customer_id) or (customer_id,staff_id)这种索引呢?
+    在建立索引前可以先进行统计一下,
+    ```sql
+    select sum(staff_id=2),sum(customer_id=584) from payment
+    ```
+    如果发现 staff_id 的行数远远大于 customer_id 那么根据经验法则,需要创建(customer_id,staff_id)的索引.
+    <p style="color:red">这样做有一个地方需要注意,查询的结果非常依赖于选定的具体值.如果按上述办法优化,可能对其他一些条件值的查询不公平,服务器的整体性能可能变得更糟,或者其他某些查询的运行变得不如预期.</p>
+  - 6. **聚簇索引**
+    聚簇索引并不是一种单独的索引类型,而是一种数据存储方式.具体的细节依赖于其实现方式,单 InnoDB 的聚簇索引实际上在同一个结构中保存了 B-Tree 索引和数据行.
+    当表有聚簇索引时,它的数据行实际上存放在索引的叶子页(_leaf page_).术语 "聚簇" 表示数据行和相邻的键值紧凑地存储在一起.因为无法同时把数据行存放在两个不同的地方,所以一个表只能有一个聚簇索引.
+    在 InnoDB,默认使用主键聚集数据,如果没有定义主键,InnoDB 会选择一个唯一的非空索引代替.如果没有这样的索引,InnoDB 会隐式地定义一个主键来作为聚簇索引.
+    **缺点**
+    - 1. 聚簇索引最大限度地提高了 I/O 密集型应用的性能.
+    - 2. 插入速度严重依赖于插入顺序,按照主键的顺序插入是加载数据到 InnoDB 表中速度最快的方式.但如果不是按照主键顺序加载数据,那么在加载完成后最好使用 optimize table 命令重新组织下表.
+    - 3. 聚簇索引更新索引列的代价很高,因此会强制 InnoDB 将每个被更新的行移动到新的位置.
+    - 4. 基于聚簇索引的表在插入新行,或者主键被更新导致需要移动行的时候,可能面临"页分裂"的问题.当行的主键值要求必须将这一样插入到某个已满的页中时,存储引擎会将该页分裂成两个页面来容纳,页分裂会导致表中占用更多的磁盘空间.
+    - 5. 聚簇索引可能导致全表扫描很慢,尤其是行比较稀疏,或者由于页分裂导致数据存储不连续的时候.
+    - 6. 二级索引(非聚簇索引) 可能比想要的要更大,因为在二级索引的叶子节点包含了引用行的主键列.
+    - 7. 二级索引访问需要两次索引查找,而不是一次.
 
-
-
-- ### <p id="4_2">如何使用表关系</p>
+* ### <p id="4_2">如何使用表关系</p>
   **introduction _table relationships_ here**
-- ### <p id="4_3">小心你的查询</p>
+* ### <p id="4_3">小心你的查询</p>
 
   **introduction _query problem_ here**
 
-- ## <p id="5">使用 java 管理你的 MySQL</p>
+* ## <p id="5">使用 java 管理你的 MySQL</p>
 
-- ### <p id="5_1">java 连接 mysql</p>
+* ### <p id="5_1">java 连接 mysql</p>
 
   **加载驱动**
 
@@ -557,7 +582,7 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
   }
   ```
 
-- ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
+* ### <p id="5_2">使用 java 对 MySQL 的 curd 进行事务管理</p>
 
   - **insert**
     不是预处理,有可能出现 sql 注入问题.
@@ -728,7 +753,7 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     select * from author;  -- query select.
     ```
 
-- ## <p id="6">附录</p>
+* ## <p id="6">附录</p>
 
   - ### <p id="6_1">常用查询</p>
 
@@ -747,7 +772,7 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     mysql -u root -p employees < insert.sql --执行插入数据语句
     ```
 
-- ## <p id="7">数据表设计思考</p>
+* ## <p id="7">数据表设计思考</p>
   - ### <p id="7_1">计数表</p>
     计数器表
     ```sql
