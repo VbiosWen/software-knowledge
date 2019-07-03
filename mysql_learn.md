@@ -779,6 +779,7 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     ```sql
     create database vbiso_test default character set utf8mb4 collate utf8mb4_general_ci --创建数据库并指定编码方式.
     create table if not exists tablename()ENGINE = InnoDB default charset utf8mb4 collate utf8mb4_general_ci --创建数据表
+    select * from employees into outfile '/var/lib/mysql-files/employees1.csv' fields terminated by ',' optionally enclosed by '"' escaped by '"' lines terminated by '\r\n' --导出数据到 csv
 
     ```
 
