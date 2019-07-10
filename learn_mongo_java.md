@@ -367,3 +367,5 @@
     > db.collectionName.getIndexes(); 查看所有的索引
     > db.collectionName.totalIndexSize();查看所有的索引所占的空间.
     > db.runCommand({"dropIndexes":"foo","index":"\*"}) 删除所有索引,慎用!!!.
+
+
