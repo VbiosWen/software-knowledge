@@ -781,6 +781,8 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     create table if not exists tablename()ENGINE = InnoDB default charset utf8mb4 collate utf8mb4_general_ci --创建数据表
     select * from employees into outfile '/var/lib/mysql-files/employees1.csv' fields terminated by ',' optionally enclosed by '"' escaped by '"' lines terminated by '\r\n' --导出数据到 csv
 
+    alter table scheduler_detail modify column scheduler_name varchar(512);
+
     ```
 
   - ### <p id="6_2">常用 mysql 管理命令</p>
