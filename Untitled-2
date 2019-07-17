@@ -1,0 +1,44 @@
+mongodb 查询
+数字
+{
+    key : "key",
+    value : "时间戳"
+    type : ge | gt | lt |lte 
+}
+字符串
+{
+    key: "key",
+    value:"value"
+    type: eq| prefix
+}
+
+
+
+
+mongodb查询结构:
+
+and {
+    key1:"value",
+    key2:"value",
+    "$or":[
+        {"key5":{"$gt":100},{"key6":{"$lt":1000}}
+    ],
+    "key3":{"$gt":100}
+}
+
+{
+    "key1":"value",
+    "key2":"value",
+    "__or":[
+        {"key5":{"$gt":100},{"key6":{"$lt":1000}}
+    ]
+}
+
+
+{
+    "a":1
+    "b":1
+    "__or":[
+        {"c":{"gt":1},{"c":{"lt":10}}}
+    ]
+}
