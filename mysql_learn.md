@@ -816,11 +816,3 @@ select convert(title using utf8) from titles; -将字段 转换为 utf8 编码
     --获得统计结果,可以使用聚合查询
     select sum(cnt) from hit_counter;
     ```
-
-db.collectionName.aggregate([{
-$match:{gmt_created:{$ge:NumberLong("date")}}
-},{
-$group:{user_id,total:{$sum:"$amount"}}
-}])
-
-./mongo/bin/mongoexport -uweike -piha0p1ng  -d wk_comm_COMMON_DB -c historySyncJobs -f userId,success,finishedTime --csv -o history_sync_jobs.csv
