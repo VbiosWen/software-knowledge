@@ -9,8 +9,7 @@
 - ## [Zookeeper的典型应用](#5)
 - ## [Zookeeper的技术内幕](#6)
 - ## [Zookeeper运维](#7)
-
-
+## Not pleased, not to have compassion :smile: :house: :office: :books: :hospital:
 
  - ## <p id="1">分布式架构</p>
    随着计算机系统规模变得越来越大，单机已经无法满足业务的需要。这个时候就需要多台机器甚至几千台机器运行业务，这个时候就需要考虑数据的一致性，可用性，以及如何协调成千上万台机器的工作，分布式理论由此而生。
